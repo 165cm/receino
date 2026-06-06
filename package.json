@@ -1,0 +1,21 @@
+{
+  "name": "taberec",
+  "version": "0.1.0",
+  "private": true,
+  "description": "食べレコ（TabeRec）- 食費レシートOCR家計簿アプリ",
+  "homepage": "https://taberec.com",
+  "workspaces": [
+    "packages/*",
+    "server",
+    "app"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "test:core": "npm run test -w @taberec/core",
+    "dev:server": "npm run dev -w @taberec/server"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

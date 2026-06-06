@@ -1,0 +1,70 @@
+// server/src/routes/users.ts
+// ユーザー作成（初回起動=DL）と登録（週次付与の有効化）。SSOT §4.1。
+
+import type { FastifyInstance } from 'fastify';
+import { grantSignupBonus, emptyBucket, weekKey, type User } from '@taberec/core';
+import type { Context } from '../context.js';
+import { newId, newReferralCode } from '../util.js';
+import { requireUser } from '../middleware/auth.js';
+import { track } from '../track.js';
+
+export function registerUserRoutes(app: FastifyInstance, ctx: Context) {
+  // POST /users : 初回起動。signup_bonus +5 を付与（1回のみ）。SSOT §4.1。
+  app.post('/users', async (req, reply) => {
+    const body = (req.body ?? {}) as { timezone?: string };
+    const tz = body.timezone || 'Asia/Tokyo';
+    const now = ctx.now();
+    const user: User = {
+      id: newId(),
+      created_at: now.toISOString(),
+      registered_at: null, // 未登録（DLのみ）→ 週次付与はまだ無効
+      timezone: tz,
+      is_premium: false,
+      premium_since: null,
+      trial_ends_at: null,
+      goal: '',
+      referral_code: newReferralCode(),
+      referred_by: null,
+    };
+    ctx.repo.createUser(user);
+    // 初回付与 +5（失効なし・1回のみ）
+    const bucket = grantSignupBonus(emptyBucket(weekKey(now, tz)));
+    ctx.repo.setBucket(user.id, bucket);
+    track(ctx, user.id, 'signup'); // §8
+    reply.code(201).send({
+      user: publicUser(user),
+      credits: ctx.credits.getBalance(user.id, now),
+    });
+  });
+
+  // POST /register : アカウント登録完了 → 週次付与を有効化。SSOT §4.1 / §10。
+  app.post('/register', async (req, reply) => {
+    const user = requireUser(ctx, req, reply);
+    if (!user) return;
+    const body = (req.body ?? {}) as { goal?: string; monthly_budget_jpy?: number };
+    const now = ctx.now();
+    const updated = ctx.repo.updateUser(user.id, {
+      registered_at: user.registered_at ?? now.toISOString(),
+      goal: body.goal ?? user.goal,
+      monthly_budget_jpy:
+        typeof body.monthly_budget_jpy === 'number' ? body.monthly_budget_jpy : user.monthly_budget_jpy ?? null,
+    });
+    if (user.registered_at == null) track(ctx, user.id, 'register'); // 初回登録のみ §8
+    // 登録直後に週次付与を反映
+    const credits = ctx.credits.getBalance(updated.id, now);
+    reply.send({ user: publicUser(updated), credits });
+  });
+}
+
+export function publicUser(u: User) {
+  return {
+    id: u.id,
+    timezone: u.timezone,
+    is_premium: u.is_premium,
+    trial_ends_at: u.trial_ends_at,
+    registered: u.registered_at != null,
+    goal: u.goal,
+    referral_code: u.referral_code,
+    referred_by: u.referred_by,
+  };
+}

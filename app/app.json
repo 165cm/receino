@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "食べレコ",
+    "slug": "taberec",
+    "scheme": "taberec",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "レシート画像の選択に使用します。",
+          "cameraPermission": "レシートの撮影に使用します。"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

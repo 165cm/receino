@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(npx -v)",
+      "Bash(sw_vers)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/aimakunana/.nvm/versions/**)",
+      "Read(//Users/aimakunana/.volta/**)",
+      "Bash(curl --version)"
+    ]
+  }
+}
