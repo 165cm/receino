@@ -29,15 +29,15 @@ scripts/        demo.sh（受け入れフロー実演）, web-preview.sh
 ```bash
 export PATH="$HOME/.local/node/bin:$PATH"
 npm install
-npm run build -w @taberec/core   # core を dist へビルド（app/server はこれを参照）
+npm run build -w @receino/core   # core を dist へビルド（app/server はこれを参照）
 ```
 
 ## テスト
 
 ```bash
 npm test                      # 全ワークスペース（core 21 + server 11）
-npm run test -w @taberec/core
-npm run test -w @taberec/server
+npm run test -w @receino/core
+npm run test -w @receino/server
 ```
 
 ## ローカルプレビュー
@@ -53,7 +53,7 @@ bash scripts/demo.sh          # 受け入れフローを一通り実演（作成
 2) アプリ（Expo Web・ポート8081）
 
 ```bash
-npm run web -w @taberec/app   # http://localhost:8081 をブラウザで開く
+npm run web -w @receino/app   # http://localhost:8081 をブラウザで開く
 ```
 
 > アプリは既定で `http://localhost:3001` の API に接続。変更は `EXPO_PUBLIC_API_URL` で。
@@ -68,7 +68,7 @@ Web で localhost 以外から開かれると自動でそのホストの `:3001`
 2. PCで API とWeb を起動（どちらも `0.0.0.0` 公開済み）:
    ```bash
    npm run dev:server                 # :3001
-   npm run web -w @taberec/app        # :8081
+   npm run web -w @receino/app        # :8081
    ```
 3. スマホのブラウザで **`http://<PCのLAN_IP>:8081`** を開く（例: `http://192.168.11.4:8081`）。
    → アプリは自動で `http://<PCのLAN_IP>:3001` のAPIに接続します。
@@ -116,7 +116,7 @@ Web で localhost 以外から開かれると自動でそのホストの `:3001`
 ## taberec.com への書き出し（本番Web）
 
 ```bash
-npm run export:web -w @taberec/app   # app/dist/ に静的ファイルを生成
+npm run export:web -w @receino/app   # app/dist/ に静的ファイルを生成
 # app/dist/ を任意の静的ホスティング（Cloud Storage + CDN 等）へデプロイ
 ```
 

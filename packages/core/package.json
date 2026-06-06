@@ -1,5 +1,5 @@
 {
-  "name": "@taberec/core",
+  "name": "@receino/core",
   "version": "0.1.0",
   "description": "Receino プラットフォーム非依存コアロジック（クレジットエンジン・型・信頼度メーター）",
   "type": "module",

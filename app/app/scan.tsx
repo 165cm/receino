@@ -4,7 +4,7 @@ import { ScrollView, Text, View, StyleSheet, TextInput, Pressable, ActivityIndic
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { CATEGORIES, type Category } from '@taberec/core';
+import { CATEGORIES, type Category } from '@receino/core';
 import { api, type Draft, type DraftItem } from '../src/api';
 import { useStore } from '../src/store';
 import { Card, Btn } from '../src/components';

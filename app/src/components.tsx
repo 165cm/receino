@@ -3,7 +3,7 @@
 import React from 'react';
 import { Text, View, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
-import { reliability, RELIABILITY_DISCLAIMER, FREE_REACH_CAP } from '@taberec/core';
+import { reliability, RELIABILITY_DISCLAIMER, FREE_REACH_CAP } from '@receino/core';
 import { colors, radius, space } from './theme';
 
 // 円グラフ用の配色パレット。

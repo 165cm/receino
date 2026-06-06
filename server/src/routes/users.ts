@@ -2,7 +2,7 @@
 // ユーザー作成（初回起動=DL）と登録（週次付与の有効化）。SSOT §4.1。
 
 import type { FastifyInstance } from 'fastify';
-import { grantSignupBonus, emptyBucket, weekKey, type User } from '@taberec/core';
+import { grantSignupBonus, emptyBucket, weekKey, type User } from '@receino/core';
 import type { Context } from '../context.js';
 import { newId, newReferralCode } from '../util.js';
 import { requireUser } from '../middleware/auth.js';

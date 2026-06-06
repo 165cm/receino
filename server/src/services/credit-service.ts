@@ -11,7 +11,7 @@ import {
   grantReferral,
   type CreditBucket,
   type CreditKind,
-} from '@taberec/core';
+} from '@receino/core';
 import type { Repo } from '../db/repo.js';
 
 export interface BalanceView {

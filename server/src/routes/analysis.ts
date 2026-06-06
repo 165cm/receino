@@ -5,7 +5,7 @@
 // 集計は core の computeAnalysis（純関数）に委譲。SSOT §3.2。
 
 import type { FastifyInstance } from 'fastify';
-import { computeAnalysis, type Grain } from '@taberec/core';
+import { computeAnalysis, type Grain } from '@receino/core';
 import type { Context } from '../context.js';
 import { requireUser } from '../middleware/auth.js';
 

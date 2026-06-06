@@ -4,7 +4,7 @@
 //  GET  /referrals/status : 自分のコード・成立件数・生涯付与・残り上限。
 
 import type { FastifyInstance } from 'fastify';
-import { REFERRAL_LIFETIME_CAP, type Referral } from '@taberec/core';
+import { REFERRAL_LIFETIME_CAP, type Referral } from '@receino/core';
 import type { Context } from '../context.js';
 import { requireUser } from '../middleware/auth.js';
 import { track } from '../track.js';

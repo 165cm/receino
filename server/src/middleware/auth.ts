@@ -3,7 +3,7 @@
 
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Context } from '../context.js';
-import type { User } from '@taberec/core';
+import type { User } from '@receino/core';
 
 export function requireUser(
   ctx: Context,

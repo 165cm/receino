@@ -7,7 +7,7 @@
 // プロバイダ選択は context.ts（Google → Claude → Mock の順）。
 
 import Anthropic from '@anthropic-ai/sdk';
-import { CATEGORIES, normalizeCategory, TAXONOMY, isValidL2, l1OfL2, inferL2, type ReceiptItem } from '@taberec/core';
+import { CATEGORIES, normalizeCategory, TAXONOMY, isValidL2, l1OfL2, inferL2, type ReceiptItem } from '@receino/core';
 
 const TAXONOMY_TREE_TEXT = Object.entries(TAXONOMY)
   .map(([l1, l2s]) => `  ${l1}: ${l2s.join('・')}`)

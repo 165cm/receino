@@ -1,5 +1,5 @@
 {
-  "name": "@taberec/server",
+  "name": "@receino/server",
   "version": "0.1.0",
   "description": "Receino APIサーバ（クレジット/紹介/課金の真実を保持）",
   "type": "module",
@@ -11,7 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
     "@fastify/cors": "^9.0.1",
-    "@taberec/core": "*",
+    "@receino/core": "*",
     "fastify": "^4.28.1"
   },
   "devDependencies": {

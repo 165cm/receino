@@ -4,4 +4,4 @@ set -e
 export PATH="$HOME/.local/node/bin:$PATH"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-exec npm run start -w @taberec/server
+exec npm run start -w @receino/server

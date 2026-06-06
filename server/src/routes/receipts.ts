@@ -3,7 +3,7 @@
 // SSOT §5.3 / §4.2 / §6。
 
 import type { FastifyInstance } from 'fastify';
-import { normalizeCategory, reliability, RELIABILITY_DISCLAIMER, isValidL2, l1OfL2, inferL2, type Receipt, type ReceiptItem } from '@taberec/core';
+import { normalizeCategory, reliability, RELIABILITY_DISCLAIMER, isValidL2, l1OfL2, inferL2, type Receipt, type ReceiptItem } from '@receino/core';
 import type { Context } from '../context.js';
 import { requireUser } from '../middleware/auth.js';
 import { newId } from '../util.js';

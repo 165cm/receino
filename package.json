@@ -12,8 +12,8 @@
   "scripts": {
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
-    "test:core": "npm run test -w @taberec/core",
-    "dev:server": "npm run dev -w @taberec/server"
+    "test:core": "npm run test -w @receino/core",
+    "dev:server": "npm run dev -w @receino/server"
   },
   "engines": {
     "node": ">=20"

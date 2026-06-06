@@ -1,5 +1,5 @@
 // app/metro.config.js
-// モノレポ構成: ワークスペースルートを監視し @taberec/core のTSソースを解決・変換する。
+// モノレポ構成: ワークスペースルートを監視し @receino/core のTSソースを解決・変換する。
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 

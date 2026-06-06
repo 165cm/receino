@@ -4,7 +4,7 @@
 // SSOT §5.2 のスキーマに対応。
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import type { CreditBucket, Receipt, Referral, User } from '@taberec/core';
+import type { CreditBucket, Receipt, Referral, User } from '@receino/core';
 
 /** 自前計測イベント。SSOT §8。 */
 export interface AnalyticsEvent {

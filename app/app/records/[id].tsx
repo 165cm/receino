@@ -3,7 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import { ScrollView, Text, View, StyleSheet, TextInput, Pressable, Image, ActivityIndicator, Platform, Alert, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
-import { CATEGORIES, TAXONOMY, l1OfL2, categoryForL2 } from '@taberec/core';
+import { CATEGORIES, TAXONOMY, l1OfL2, categoryForL2 } from '@receino/core';
 import { api, type DraftItem } from '../../src/api';
 import { Card, Btn } from '../../src/components';
 import { colors, space } from '../../src/theme';

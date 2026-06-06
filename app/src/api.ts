@@ -3,7 +3,7 @@
 
 import Constants from 'expo-constants';
 import { storage } from './storage';
-import type { Category } from '@taberec/core';
+import type { Category } from '@receino/core';
 
 // API接続先の解決順:
 //  1) 明示設定（app.json extra.apiUrl / EXPO_PUBLIC_API_URL）
