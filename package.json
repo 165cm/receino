@@ -1,9 +1,9 @@
 {
-  "name": "taberec",
+  "name": "receino",
   "version": "0.1.0",
   "private": true,
   "description": "食べレコ（TabeRec）- 食費レシートOCR家計簿アプリ",
-  "homepage": "https://taberec.com",
+  "homepage": "https://receino.com",
   "workspaces": [
     "packages/*",
     "server",

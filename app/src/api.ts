@@ -24,7 +24,7 @@ function resolveBaseUrl(): string {
 
 const BASE_URL: string = resolveBaseUrl();
 
-const USER_KEY = 'taberec.user_id';
+const USER_KEY = 'receino.user_id';
 
 export function getUserId(): string | null {
   return storage.get(USER_KEY);

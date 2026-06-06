@@ -3,7 +3,7 @@
 
 import { storage } from './storage';
 
-const ONBOARDED_KEY = 'taberec.onboarded';
+const ONBOARDED_KEY = 'receino.onboarded';
 export function isOnboarded(): boolean {
   return storage.get(ONBOARDED_KEY) === '1';
 }

@@ -4,7 +4,7 @@
 
 撮るだけ3秒、食費の正体がわかる家計簿。レシート撮影 → AIが品目・カテゴリ・金額を自動構造化 → 食費を見える化。
 
-公開予定: **https://taberec.com**
+公開予定: **https://receino.com**
 
 仕様の単一の真実(SSOT)はルートの開発仕様書、実装設計は [`docs/DESIGN.md`](docs/DESIGN.md)。
 
@@ -13,7 +13,7 @@
 ```
 packages/core/  プラットフォーム非依存のコアロジック（クレジットエンジン・型・信頼度メーター）+ 単体テスト
 server/         Fastify API。クレジット/紹介/課金の真実を保持（残高ガード・トランザクション境界）
-app/            Expo (React Native) アプリ。iOS/Android/Web を単一コードで。taberec.com は Web 書き出し
+app/            Expo (React Native) アプリ。iOS/Android/Web を単一コードで。receino.com は Web 書き出し
 scripts/        demo.sh（受け入れフロー実演）, web-preview.sh
 ```
 
@@ -113,7 +113,7 @@ Web で localhost 以外から開かれると自動でそのホストの `:3001`
 > モデルは既定 `gemini-2.0-flash`。`.env` の `GEMINI_MODEL` で変更可（`gemini-2.5-flash` 等）。
 > 代替として Anthropic Claude も利用可（`ANTHROPIC_API_KEY`。Google 未設定時に使用）。
 
-## taberec.com への書き出し（本番Web）
+## receino.com への書き出し（本番Web）
 
 ```bash
 npm run export:web -w @receino/app   # app/dist/ に静的ファイルを生成

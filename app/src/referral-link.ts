@@ -4,7 +4,7 @@
 import { storage } from './storage';
 import { api } from './api';
 
-const PENDING_KEY = 'taberec.pending_ref';
+const PENDING_KEY = 'receino.pending_ref';
 
 /** URLの ?ref= を取り込んで保留（Web初回起動時に呼ぶ）。 */
 export function capturePendingReferral(): void {

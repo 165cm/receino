@@ -3,12 +3,12 @@
 
 import { Platform, Share } from 'react-native';
 
-/** 招待リンク。Web は現在のオリジン、ネイティブ/本番は taberec.com。?ref=コードで被紹介者を判定。 */
+/** 招待リンク。Web は現在のオリジン、ネイティブ/本番は receino.com。?ref=コードで被紹介者を判定。 */
 export function buildInviteUrl(code: string): string {
   if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.origin) {
     return `${window.location.origin}/?ref=${encodeURIComponent(code)}`;
   }
-  return `https://taberec.com/?ref=${encodeURIComponent(code)}`;
+  return `https://receino.com/?ref=${encodeURIComponent(code)}`;
 }
 
 export function inviteMessage(code: string): string {

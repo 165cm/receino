@@ -6,7 +6,7 @@
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": [
         "-c",
-        "export PATH=\"$HOME/.local/node/bin:$PATH\"; cd /Users/aimakunana/Documents/GitHub/TabeRec/app; exec env CI=1 EXPO_NO_TELEMETRY=1 npx expo start --web --port 8081"
+        "export PATH=\"$HOME/.local/node/bin:$PATH\"; cd /Users/aimakunana/Documents/GitHub/receino/app; exec env CI=1 EXPO_NO_TELEMETRY=1 npx expo start --web --port 8081"
       ],
       "port": 8081,
       "autoPort": false
