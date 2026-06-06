@@ -13,7 +13,7 @@ export function buildInviteUrl(code: string): string {
 
 export function inviteMessage(code: string): string {
   const url = buildInviteUrl(code);
-  return `食べレコで一緒に食費管理しない？このリンクから登録すると、お互いにスキャン5枚プレゼント🎁\n${url}`;
+  return `Receino（レシーノ）で一緒に食費管理しない？このリンクから登録すると、お互いにスキャン5枚プレゼント🎁\n${url}`;
 }
 
 export type ShareResult = 'shared' | 'copied' | 'manual';
@@ -35,7 +35,7 @@ export async function shareInvite(code: string): Promise<{ result: ShareResult; 
   const nav: any = typeof navigator !== 'undefined' ? navigator : undefined;
   if (nav?.share) {
     try {
-      await nav.share({ title: '食べレコ', text: message, url });
+      await nav.share({ title: 'Receino', text: message, url });
       return { result: 'shared', url };
     } catch {
       /* ユーザーキャンセル等 → コピーにフォールバック */

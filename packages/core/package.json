@@ -1,7 +1,7 @@
 {
   "name": "@taberec/core",
   "version": "0.1.0",
-  "description": "食べレコ プラットフォーム非依存コアロジック（クレジットエンジン・型・信頼度メーター）",
+  "description": "Receino プラットフォーム非依存コアロジック（クレジットエンジン・型・信頼度メーター）",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

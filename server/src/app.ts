@@ -18,7 +18,7 @@ export function buildApp(ctx: Context = createContext()): { app: FastifyInstance
   const app = Fastify({ logger: false, bodyLimit: 25 * 1024 * 1024 });
   app.register(cors, { origin: true });
 
-  app.get('/health', async () => ({ ok: true, app: '食べレコ', ts: new Date().toISOString() }));
+  app.get('/health', async () => ({ ok: true, app: 'Receino', ts: new Date().toISOString() }));
 
   registerUserRoutes(app, ctx);
   registerScanRoutes(app, ctx);

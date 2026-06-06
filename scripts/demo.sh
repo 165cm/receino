@@ -22,7 +22,7 @@ curl -s "$B/credits" -H "x-user-id: $A" | jqp
 
 line "4) 保存（確定 → ★ここで1枚消費。signup 5→4、信頼度 n=1）"
 curl -s -X POST "$B/receipts" -H "x-user-id: $A" "${CT[@]}" \
-  -d '{"store":"スーパーたべれこ","date":"2026-06-03","total":616,"items":[{"name":"とりむね肉","amount":398,"category":"生鮮食品"},{"name":"牛乳","amount":218,"category":"飲料"}]}' | jqp
+  -d '{"store":"スーパーレシーノ","date":"2026-06-03","total":616,"items":[{"name":"とりむね肉","amount":398,"category":"生鮮食品"},{"name":"牛乳","amount":218,"category":"飲料"}]}' | jqp
 
 line "5) 残り4枚を使い切る（signup 4→0）"
 for i in 1 2 3 4; do

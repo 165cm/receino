@@ -26,7 +26,7 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: colors.bg },
         }}
       >
-        <Stack.Screen name="index" options={{ title: '食べレコ' }} />
+        <Stack.Screen name="index" options={{ title: 'Receino' }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="scan" options={{ title: 'レシートを撮る', presentation: 'modal' }} />
         <Stack.Screen name="records/index" options={{ title: '記録一覧' }} />

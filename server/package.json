@@ -1,7 +1,7 @@
 {
   "name": "@taberec/server",
   "version": "0.1.0",
-  "description": "食べレコ APIサーバ（クレジット/紹介/課金の真実を保持）",
+  "description": "Receino APIサーバ（クレジット/紹介/課金の真実を保持）",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",

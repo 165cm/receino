@@ -2,7 +2,7 @@
 export const colors = {
   bg: '#FFF9F2',
   card: '#FFFFFF',
-  primary: '#FF7A45', // 食べレコ オレンジ
+  primary: '#FF7A45', // Receino オレンジ
   primaryDark: '#E8602A',
   text: '#2B2B2B',
   sub: '#7A7A7A',

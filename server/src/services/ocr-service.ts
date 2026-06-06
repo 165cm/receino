@@ -170,7 +170,7 @@ export class MockOcrProvider implements OcrProvider {
       l2: isValidL2(i.l2) ? i.l2 : undefined,
       l1: isValidL2(i.l2) ? l1OfL2(i.l2) : undefined,
     }));
-    return { store: 'スーパーたべれこ', date: '2026-06-03', items, total: items.reduce((s, i) => s + i.amount, 0) };
+    return { store: 'スーパーレシーノ', date: '2026-06-03', items, total: items.reduce((s, i) => s + i.amount, 0) };
   }
 }
 

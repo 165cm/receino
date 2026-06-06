@@ -78,7 +78,8 @@ export default function Onboarding() {
       <ScrollView contentContainerStyle={styles.body}>
         {step === 0 && (
           <Center>
-            <Text style={styles.logo}>🍱 食べレコ</Text>
+            <Text style={styles.logo}>🧾 Receino</Text>
+            <Text style={styles.tagline}>Scan. Know. Save. — 撮って、知って、節約する。</Text>
             <Text style={styles.h1}>撮るだけ3秒、{'\n'}食費の正体がわかる。</Text>
             <Text style={styles.lead}>レシートを撮るとAIが品目・カテゴリ・金額を自動でわけて記録。手入力はもう不要です。</Text>
           </Center>
@@ -216,7 +217,8 @@ const styles = StyleSheet.create({
   progressFill: { height: 6, backgroundColor: colors.primary, borderRadius: 3 },
   body: { padding: space(3), flexGrow: 1, justifyContent: 'center' },
   center: { alignItems: 'center', justifyContent: 'center', flex: 1 },
-  logo: { fontSize: 28, fontWeight: '900', color: colors.primary, marginBottom: space(2) },
+  logo: { fontSize: 30, fontWeight: '900', color: colors.primary, marginBottom: space(0.5) },
+  tagline: { fontSize: 13, fontWeight: '700', color: colors.sub, marginBottom: space(2), textAlign: 'center' },
   h1: { fontSize: 30, fontWeight: '900', color: colors.text, textAlign: 'center', lineHeight: 40 },
   h2: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 6 },
   lead: { fontSize: 15, color: colors.sub, textAlign: 'center', marginTop: space(1.5), lineHeight: 22 },

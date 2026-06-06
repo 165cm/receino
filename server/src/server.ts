@@ -47,7 +47,7 @@ app
   .listen({ port: PORT, host: '0.0.0.0' })
   .then(() => {
     // eslint-disable-next-line no-console
-    console.log(`🍱 食べレコ API listening on http://localhost:${PORT}`);
+    console.log(`🧾 Receino API listening on http://localhost:${PORT}`);
   })
   .catch((err) => {
     // eslint-disable-next-line no-console

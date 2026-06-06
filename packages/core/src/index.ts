@@ -1,5 +1,5 @@
 // packages/core/src/index.ts
-// 食べレコ コアロジック公開エントリ。
+// Receino コアロジック公開エントリ。
 
 export * from './types.js';
 export * from './categories.js';

@@ -4,7 +4,7 @@
 // --- 開始: 修正箇所 - ブラウザ拡張(MetaMask等)由来の未処理エラーを無視する ---
 // 一部のブラウザ拡張(MetaMask の inpage.js 等)は全ページに注入され、
 // "Failed to connect to MetaMask" を未処理 Promise 拒否として投げる。
-// これは食べレコと無関係だが RN-Web の LogBox が全画面エラーで覆ってしまうため、
+// これはReceinoと無関係だが RN-Web の LogBox が全画面エラーで覆ってしまうため、
 // 拡張由来のものだけを抑止する（自前アプリのエラーはそのまま表示）。
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   const isExtensionNoise = (text) => {
