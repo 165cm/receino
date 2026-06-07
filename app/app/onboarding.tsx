@@ -1,4 +1,4 @@
-// app/app/onboarding.tsx — 価値実証型オンボーディング（SSOT §3.1 全8ステップ）
+// app/app/onboarding.tsx — 価値実証型オンボーディング（SSOT §3.1）
 import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -11,8 +11,10 @@ import {
 } from '../src/onboarding';
 import { tryClaimPendingReferral } from '../src/referral-link';
 
-const TOTAL = 8;
+const TOTAL = 9;
 const ANALYZE_STEPS = ['読取', '抽出', '分類', '仕上げ'];
+const HOUSEHOLD_MIN = 1;
+const HOUSEHOLD_MAX = 10;
 
 export default function Onboarding() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [goal, setGoal] = useState<Goal | null>(null);
   const [budget, setBudget] = useState<BudgetRange | null>(null);
+  const [household, setHousehold] = useState(2); // 何人暮らし（人数のみ・設定で細分化可）
   const [draft, setDraft] = useState<Draft | null>(null);
   const [animIdx, setAnimIdx] = useState(0);
   const [finishing, setFinishing] = useState(false);
@@ -28,9 +31,9 @@ export default function Onboarding() {
   const next = () => setStep((s) => Math.min(s + 1, TOTAL - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
-  // ステップ4: 解析演出（段階表示）+ 実解析（モックOCR）
+  // ステップ5: 解析演出（段階表示）+ 実解析（モックOCR）。サンプルは保存しない（デモのみ）。
   useEffect(() => {
-    if (step !== 4 || startedRef.current) return;
+    if (step !== 5 || startedRef.current) return;
     startedRef.current = true;
     setAnimIdx(0);
     const timer = setInterval(() => setAnimIdx((i) => Math.min(i + 1, ANALYZE_STEPS.length - 1)), 400);
@@ -41,7 +44,7 @@ export default function Onboarding() {
       } catch {
         /* プレビューのモックは失敗しない想定 */
       } finally {
-        setTimeout(() => { clearInterval(timer); setStep(5); }, 1700);
+        setTimeout(() => { clearInterval(timer); setStep(6); }, 1700);
       }
     })();
     return () => clearInterval(timer);
@@ -50,19 +53,16 @@ export default function Onboarding() {
   async function finish(startTrial: boolean) {
     setFinishing(true);
     try {
-      // 完了時にスキャンしたレシートを本編へ保存（記録ゼロ回避・SSOT §3.1）。1枚消費。
-      if (draft) {
-        await api.saveReceipt({ store: draft.store, date: draft.date, total: draft.total, items: draft.items });
-      }
-      // ゴール＋月予算を保存しつつアカウント登録（週次付与を有効化）
-      const reg = await api.register(goal?.label ?? '', budget?.mid);
+      // ゴール＋月予算＋世帯人数を保存しつつアカウント登録（週次付与を有効化）
+      const reg = await api.register(goal?.label ?? '', budget?.mid, household);
       // 招待リンク(?ref=)経由なら成立を試みる（双方向+5）。SSOT §4.4。
       await tryClaimPendingReferral(reg.user.referred_by);
       if (startTrial) await api.subscribe(true);
-      api.track('onboarding_completed', { goal: goal?.key, budget: budget?.key, started_trial: startTrial }); // §8
+      api.track('onboarding_completed', { goal: goal?.key, budget: budget?.key, household, started_trial: startTrial }); // §8
       setOnboarded();
       await refresh();
-      router.replace('/');
+      // デモのサンプルは保存しない（分析を汚染しないため）。最初の1枚は本物を撮ってもらい初記録にする。SSOT §3.1。
+      router.replace('/scan');
     } catch {
       setFinishing(false);
     }
@@ -106,6 +106,24 @@ export default function Onboarding() {
         )}
 
         {step === 3 && (
+          <View>
+            <Text style={styles.h2}>何人暮らしですか？</Text>
+            <Text style={styles.sub}>分析の想定量を調整します。あとで設定から、大人・子供・高齢者ごとに細かく変えられます。</Text>
+            <Card>
+              <View style={styles.stepperRow}>
+                <StepBtn label="−" onPress={() => setHousehold((n) => Math.max(HOUSEHOLD_MIN, n - 1))} disabled={household <= HOUSEHOLD_MIN} />
+                <View style={styles.stepperValueBox}>
+                  <Text style={styles.stepperValue}>{household}</Text>
+                  <Text style={styles.stepperUnit}>人</Text>
+                </View>
+                <StepBtn label="＋" onPress={() => setHousehold((n) => Math.min(HOUSEHOLD_MAX, n + 1))} disabled={household >= HOUSEHOLD_MAX} />
+              </View>
+              <Text style={styles.note}>{'👤'.repeat(household)}</Text>
+            </Card>
+          </View>
+        )}
+
+        {step === 4 && (
           <Center>
             <Text style={styles.h2}>まずは1枚、撮ってみましょう</Text>
             <Text style={styles.lead}>“魔法の瞬間”を体験。プレビューではサンプルのレシートを解析します。{'\n'}（実機ではカメラで撮影できます）</Text>
@@ -113,7 +131,7 @@ export default function Onboarding() {
           </Center>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <Center>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={[styles.h2, { marginTop: space(2) }]}>AIが解析中…</Text>
@@ -127,7 +145,7 @@ export default function Onboarding() {
           </Center>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <View>
             <Text style={styles.h2}>✨ できました！</Text>
             <Text style={styles.lead}>数秒で <Text style={styles.accent}>{draft?.items.length ?? 0}品目</Text> を自動で分類しました。</Text>
@@ -142,10 +160,11 @@ export default function Onboarding() {
               ))}
               <View style={styles.totalRow}><Text style={styles.totalLbl}>合計</Text><Text style={styles.totalVal}>¥{(draft?.total ?? 0).toLocaleString()}</Text></View>
             </Card>
+            <Text style={styles.note}>※ これはサンプルです。次に、あなたの本物のレシートを1枚撮って記録を始めましょう。</Text>
           </View>
         )}
 
-        {step === 6 && (
+        {step === 7 && (
           <View>
             <Text style={styles.h2}>あなたの年間節約見込み</Text>
             <Card>
@@ -159,7 +178,7 @@ export default function Onboarding() {
           </View>
         )}
 
-        {step === 7 && (
+        {step === 8 && (
           <View>
             <Text style={styles.h2}>7日間、無料でお試し</Text>
             <Card>
@@ -180,18 +199,19 @@ export default function Onboarding() {
         {step === 0 && <Btn label="はじめる" onPress={next} />}
         {step === 1 && <Btn label="次へ" onPress={next} disabled={!goal} />}
         {step === 2 && <Btn label="次へ" onPress={next} disabled={!budget} />}
-        {step === 3 && <Btn label="サンプルを解析する" onPress={next} />}
-        {step === 4 && <Text style={styles.waiting}>解析しています…</Text>}
-        {step === 5 && <Btn label="すごい！次へ" onPress={next} />}
-        {step === 6 && <Btn label="続ける" onPress={next} />}
-        {step === 7 && (
+        {step === 3 && <Btn label="次へ" onPress={next} />}
+        {step === 4 && <Btn label="サンプルを解析する" onPress={next} />}
+        {step === 5 && <Text style={styles.waiting}>解析しています…</Text>}
+        {step === 6 && <Btn label="すごい！次へ" onPress={next} />}
+        {step === 7 && <Btn label="続ける" onPress={next} />}
+        {step === 8 && (
           <>
             <Btn label="7日間無料で始める" onPress={() => finish(true)} loading={finishing} />
             <View style={{ height: space(1) }} />
             <Btn label="まずは無料で使う" variant="ghost" onPress={() => finish(false)} loading={finishing} />
           </>
         )}
-        {step > 0 && step !== 4 && step !== 7 && (
+        {step > 0 && step !== 5 && step !== 8 && (
           <Pressable onPress={back} style={styles.backBtn}><Text style={styles.backText}>戻る</Text></Pressable>
         )}
       </View>
@@ -207,6 +227,13 @@ function Choice({ label, selected, onPress }: { label: string; selected: boolean
     <Pressable onPress={onPress} style={[styles.choice, selected && styles.choiceSel]}>
       <Text style={[styles.choiceText, selected && styles.choiceTextSel]}>{label}</Text>
       {selected && <Text style={styles.check}>✓</Text>}
+    </Pressable>
+  );
+}
+function StepBtn({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
+  return (
+    <Pressable onPress={onPress} disabled={disabled} style={[styles.stepBtn, disabled && styles.stepBtnDisabled]}>
+      <Text style={styles.stepBtnText}>{label}</Text>
     </Pressable>
   );
 }
@@ -229,6 +256,13 @@ const styles = StyleSheet.create({
   choiceText: { fontSize: 16, fontWeight: '700', color: colors.text },
   choiceTextSel: { color: colors.primaryDark },
   check: { color: colors.primary, fontWeight: '900', fontSize: 18 },
+  stepperRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space(3) as any },
+  stepperValueBox: { flexDirection: 'row', alignItems: 'baseline', minWidth: 88, justifyContent: 'center' },
+  stepperValue: { fontSize: 44, fontWeight: '900', color: colors.text },
+  stepperUnit: { fontSize: 18, fontWeight: '700', color: colors.sub, marginLeft: 4 },
+  stepBtn: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  stepBtnDisabled: { opacity: 0.35 },
+  stepBtnText: { color: '#fff', fontSize: 28, fontWeight: '900', lineHeight: 30 },
   receiptMock: { backgroundColor: '#2B2B2B', borderRadius: 20, width: 200, height: 240, alignItems: 'center', justifyContent: 'center', marginTop: space(3) },
   animRow: { flexDirection: 'row', gap: space(1.5) as any, marginTop: space(2), flexWrap: 'wrap', justifyContent: 'center' },
   store: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: space(1) },
@@ -241,6 +275,7 @@ const styles = StyleSheet.create({
   bigSave: { fontSize: 40, fontWeight: '900', color: colors.good }, perYear: { fontSize: 18, color: colors.sub },
   vsRow: { marginTop: space(1.5) }, vs: { color: colors.text, fontSize: 14, lineHeight: 20 },
   disclaimer: { fontSize: 11, color: colors.sub, marginTop: space(1.5) },
+  note: { fontSize: 12, color: colors.sub, textAlign: 'center', marginTop: space(1.5) },
   feat: { fontSize: 16, fontWeight: '600', color: colors.text, marginVertical: 4 },
   tl: { fontSize: 14, color: colors.text, marginVertical: 3 },
   footer: { padding: space(2), borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.bg },

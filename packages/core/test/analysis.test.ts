@@ -93,6 +93,25 @@ describe('computeAnalysis', () => {
     expect(est.data_driven_ratio).toBe(0);
   });
 
+  it('世帯規模: 人数が多いほど年間頻度の事前が大きく、初期見込みも増える（粗い粒度）', () => {
+    // 1ヶ月に1回だけ観測 → 事前(世帯規模)の効きが大きい状況。
+    const r = [receipt('2026-06-01', [['牛乳 1L', 200, '飲料']])];
+    const small = computeAnalysis(r, { grain: 'l2', householdUnits: 1 });
+    const large = computeAnalysis(r, { grain: 'l2', householdUnits: 6 });
+    const milkS = small.groups.find((g) => g.name === '牛乳')!;
+    const milkL = large.groups.find((g) => g.name === '牛乳')!;
+    expect(milkL.annual_freq).toBeGreaterThan(milkS.annual_freq);
+    expect(milkL.annual_spend).toBeGreaterThan(milkS.annual_spend);
+  });
+
+  it('世帯規模: 未指定は従来（調整なし）と一致', () => {
+    const r = [receipt('2026-06-01', [['牛乳 1L', 200, '飲料']])];
+    const base = computeAnalysis(r, { grain: 'l2' });
+    const none = computeAnalysis(r, { grain: 'l2', householdUnits: 0 });
+    expect(none.groups.find((g) => g.name === '牛乳')!.annual_spend)
+      .toBe(base.groups.find((g) => g.name === '牛乳')!.annual_spend);
+  });
+
   it('目標ペース: 月予算との差', () => {
     const a = computeAnalysis(data, { monthlyBudget: 500 });
     expect(a.savings.target_monthly).toBe(500);

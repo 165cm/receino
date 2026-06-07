@@ -9,3 +9,4 @@ export * from './credit-engine.js';
 export * from './reliability.js';
 export * from './analysis.js';
 export * from './taxonomy.js';
+export * from './household.js';

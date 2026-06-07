@@ -7,6 +7,7 @@
 import type { Category } from './categories.js';
 import type { Receipt } from './types.js';
 import { grainKey, normalizeKey, typicalAnnual, TYPICAL_ANNUAL_DEFAULT, type Grain } from './taxonomy.js';
+import { householdScale } from './household.js';
 
 /** 嗜好/贅沢とみなすカテゴリ（それ以外を必需とする）。ヒューリスティック。 */
 export const DISCRETIONARY_CATEGORIES: Category[] = ['お菓子・嗜好品', '外食'];
@@ -126,9 +127,11 @@ export function bayesianAnnualSpend(monthlyTotals: number[], opts: { budget?: nu
 
 export function computeAnalysis(
   receipts: Receipt[],
-  opts: { monthlyBudget?: number | null; grain?: Grain } = {},
+  opts: { monthlyBudget?: number | null; grain?: Grain; householdUnits?: number | null } = {},
 ): AnalysisResult {
   const grain: Grain = opts.grain ?? 'item';
+  // 世帯規模で年間頻度の事前を調整（人数が多いほど「一般的な購入回数」も増える）。未設定なら1.0。
+  const hScale = householdScale(opts.householdUnits);
   const periodTotal = receipts.reduce((s, r) => s + r.total, 0);
   const receiptCount = receipts.length;
 
@@ -203,7 +206,8 @@ export function computeAnalysis(
       let a0 = FREQ_PRIOR_A;
       let b0 = FREQ_PRIOR_B;
       if (grain !== 'item') {
-        const typ = typicalAnnual(grain, g.name) ?? TYPICAL_ANNUAL_DEFAULT;
+        // 世帯規模で目安を補正（基準世帯=hScale 1.0）。データが増えれば実績へ補正される。
+        const typ = (typicalAnnual(grain, g.name) ?? TYPICAL_ANNUAL_DEFAULT) * hScale;
         b0 = TAXO_PRIOR_YEARS;
         a0 = typ * TAXO_PRIOR_YEARS; // 事前平均 = a0/b0 = typ（年間typ回）
       }

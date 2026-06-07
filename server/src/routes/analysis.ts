@@ -5,7 +5,7 @@
 // 集計は core の computeAnalysis（純関数）に委譲。SSOT §3.2。
 
 import type { FastifyInstance } from 'fastify';
-import { computeAnalysis, type Grain } from '@receino/core';
+import { computeAnalysis, householdUnits, type Grain } from '@receino/core';
 import type { Context } from '../context.js';
 import { requireUser } from '../middleware/auth.js';
 
@@ -22,7 +22,11 @@ export function registerAnalysisRoutes(app: FastifyInstance, ctx: Context) {
     const receipts = scope === 'month' ? all.filter((r) => r.date.startsWith(month)) : all;
     const grain: Grain = q.grain === 'l1' || q.grain === 'l2' ? q.grain : 'item';
 
-    const result = computeAnalysis(receipts, { monthlyBudget: user.monthly_budget_jpy ?? null, grain });
+    const result = computeAnalysis(receipts, {
+      monthlyBudget: user.monthly_budget_jpy ?? null,
+      grain,
+      householdUnits: householdUnits(user.household_composition),
+    });
     return reply.send({ scope, month, months, grain, ...result });
   });
 }

@@ -38,6 +38,7 @@ export interface CreditView {
   buckets: { signup_remaining: number; weekly_remaining: number; referral_remaining: number };
   referral_lifetime_granted: number;
 }
+export interface HouseholdComposition { adults: number; children: number; elderly: number }
 export interface PublicUser {
   id: string;
   timezone: string;
@@ -45,6 +46,7 @@ export interface PublicUser {
   trial_ends_at: string | null;
   registered: boolean;
   goal: string;
+  household_composition: HouseholdComposition | null;
   referral_code: string;
   referred_by: string | null;
 }
@@ -135,11 +137,16 @@ export const api = {
     setUserId(r.user.id);
     return r;
   },
-  register(goal: string, monthlyBudgetJpy?: number) {
+  register(goal: string, monthlyBudgetJpy?: number, householdSize?: number) {
     return req<{ user: PublicUser; credits: CreditView }>('POST', '/register', {
       goal,
       monthly_budget_jpy: monthlyBudgetJpy,
+      household_size: householdSize,
     });
+  },
+  // 世帯構成の微調整（設定画面）。分析の年間頻度事前に反映。
+  updateHousehold(c: HouseholdComposition) {
+    return req<{ user: PublicUser }>('POST', '/household', c);
   },
   analysis(scope: 'all' | 'month', month?: string, grain: 'l1' | 'l2' | 'item' = 'item') {
     const base = scope === 'month' && month ? `?scope=month&month=${month}` : `?scope=all`;

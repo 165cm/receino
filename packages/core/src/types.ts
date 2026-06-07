@@ -2,6 +2,7 @@
 // 永続データの型定義。SSOT §5.2。
 
 import type { Category } from './categories.js';
+import type { HouseholdComposition } from './household.js';
 
 export interface User {
   id: string;
@@ -13,6 +14,7 @@ export interface User {
   trial_ends_at: string | null;
   goal: string; // オンボのゴール選択
   monthly_budget_jpy?: number | null; // 月の食費目安（オンボの食費レンジ）。目標ペース用
+  household_composition?: HouseholdComposition | null; // 世帯構成（分析の年間頻度事前の調整用）。オンボは人数のみ→全員大人
   referral_code: string; // 自分の紹介コード
   referred_by: string | null; // 被紹介の場合の紹介者コード
 }
