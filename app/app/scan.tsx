@@ -296,7 +296,7 @@ export default function Scan() {
           </View>
           <View style={styles.itemRow}>
             <Pressable onPress={() => cycleCategory(idx)} style={styles.catChip}>
-              <Text style={styles.catChipText}>{it.category} ▸</Text>
+              <Text style={styles.catChipText} numberOfLines={1}>{it.category} ▸</Text>
             </Pressable>
             <View style={styles.amountBox}>
               <Text style={styles.yen}>¥</Text>
@@ -353,12 +353,12 @@ const styles = StyleSheet.create({
   nameInput: { flex: 1, fontSize: 15, fontWeight: '700', color: colors.text, borderBottomWidth: 1, borderBottomColor: colors.line, paddingVertical: 4 },
   removeBtn: { marginLeft: 8, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   removeText: { color: colors.danger, fontSize: 16, fontWeight: '800' },
-  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  catChip: { backgroundColor: '#FFF0E8', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 as any },
+  catChip: { flexShrink: 1, backgroundColor: '#FFF0E8', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 },
   catChipText: { color: colors.primaryDark, fontWeight: '700' },
-  amountBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 8 },
+  amountBox: { width: 116, flexShrink: 0, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 8 },
   yen: { color: colors.sub, fontSize: 16 },
-  amountInput: { minWidth: 80, paddingVertical: 8, fontSize: 16, textAlign: 'right', color: colors.text },
+  amountInput: { flex: 1, paddingVertical: 8, fontSize: 16, textAlign: 'right', color: colors.text },
   fieldLabel: { fontSize: 12, color: colors.sub, marginBottom: 4 },
   input: { borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text, backgroundColor: '#fff' },
   doneTitle: { fontSize: 20, fontWeight: '900', color: colors.good },

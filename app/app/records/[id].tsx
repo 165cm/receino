@@ -98,7 +98,7 @@ export default function ReceiptDetail() {
           </View>
           <View style={styles.itemRow}>
             <Pressable onPress={() => setPickerIndex(i)} style={styles.chip}>
-              <Text style={styles.chipText}>中分類: {it.l2 || '未分類'} ▾</Text>
+              <Text style={styles.chipText} numberOfLines={1}>中分類: {it.l2 || '未分類'} ▾</Text>
             </Pressable>
             <View style={styles.amtBox}>
               <Text style={styles.yen}>¥</Text>
@@ -171,12 +171,12 @@ const styles = StyleSheet.create({
   nameInput: { flex: 1, fontSize: 15, fontWeight: '700', color: colors.text, borderBottomWidth: 1, borderBottomColor: colors.line, paddingVertical: 4 },
   rm: { marginLeft: 8, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   rmText: { color: colors.danger, fontSize: 16, fontWeight: '800' },
-  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  chip: { backgroundColor: '#FFF0E8', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 as any },
+  chip: { flexShrink: 1, backgroundColor: '#FFF0E8', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 },
   chipText: { color: colors.primaryDark, fontWeight: '700' },
-  amtBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 8 },
+  amtBox: { width: 116, flexShrink: 0, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 8 },
   yen: { color: colors.sub, fontSize: 16 },
-  amtInput: { minWidth: 80, paddingVertical: 8, fontSize: 16, textAlign: 'right', color: colors.text },
+  amtInput: { flex: 1, paddingVertical: 8, fontSize: 16, textAlign: 'right', color: colors.text },
   modalBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 18, borderTopRightRadius: 18, padding: space(2), maxHeight: '80%' },
   sheetHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: space(1) },
