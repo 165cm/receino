@@ -3,7 +3,7 @@ import React from 'react';
 import { LogBox } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { StoreProvider } from '../src/store';
+import { StoreProvider, BootOverlay } from '../src/store';
 import { colors } from '../src/theme';
 
 // ライブラリ/ブラウザ拡張由来のノイズ警告を抑止（自前のログは残す）。
@@ -36,6 +36,7 @@ export default function RootLayout() {
         <Stack.Screen name="paywall" options={{ title: 'プレミアム', presentation: 'modal' }} />
         <Stack.Screen name="settings" options={{ title: '設定' }} />
       </Stack>
+      <BootOverlay />
     </StoreProvider>
   );
 }

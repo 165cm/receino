@@ -152,6 +152,10 @@ export const api = {
     const base = scope === 'month' && month ? `?scope=month&month=${month}` : `?scope=all`;
     return req<AnalysisView>('GET', `/analysis${base}&grain=${grain}`);
   },
+  // サーバ起床確認（Render 無料枠のコールドスタート待ちに使う・短いタイムアウト）。
+  health(timeoutMs = 12_000) {
+    return req<{ ok: boolean }>('GET', '/health', undefined, timeoutMs);
+  },
   me() {
     return req<{ user: PublicUser; billing: any }>('GET', '/me');
   },
