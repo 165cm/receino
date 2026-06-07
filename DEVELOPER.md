@@ -112,9 +112,27 @@ bash scripts/phone.sh
 
 ## デプロイ手順
 
-- **Web（receino.com）**: `npm run export:web -w @receino/app` で `app/dist/` に静的ファイルを生成し、任意の静的ホスティング（Cloud Storage + CDN 等）へデプロイ。
+構成: **フロント（Web）= GitHub Pages（静的）／ バック（API）= Render（常時起動）**。Pages は静的配信のみで API は動かせないため、API は別ホストに置き、ビルド時に接続先を渡す。
+
+### 1. API を Render にデプロイ
+1. [Render](https://render.com) に GitHub でログイン → **New → Blueprint** → 本リポジトリを選択 → Apply（[`render.yaml`](./render.yaml) を使用）。
+2. ダッシュボードで env を入力: `GEMINI_API_KEY`（実OCR用）、`PREMIUM_ACCESS_CODE`（プレミアム解放の合言葉・友人に共有）。`DAILY_OCR_LIMIT` は既定200。
+3. 払い出された URL（例 `https://receino-api.onrender.com`）を控える。
+   > 無料枠は約15分無アクセスでスリープ→次アクセスで数十秒の起動待ち。ストレージは一時的（再デプロイでデータはリセット）。
+
+### 2. Web を GitHub Pages へ（プロジェクトサイト `/receino/`）
+1. リポジトリ **Settings → Secrets and variables → Actions → Variables** に `EXPO_PUBLIC_API_URL` を追加し、上記 Render の URL を設定。
+2. **Settings → Pages → Build and deployment → Source** を **GitHub Actions** にする。
+3. `main` への push で [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) が走り、`https://165cm.github.io/receino/` へ公開（手動実行も可）。
+   - ベースパスは `EXPO_BASE_URL=/receino`（[`app/app.config.js`](./app/app.config.js) が反映）。`EXPO_PUBLIC_API_URL` が未設定だと画面は出るが API に繋がらない。
+
+### 手元での書き出し確認
+```bash
+EXPO_BASE_URL=/receino EXPO_PUBLIC_API_URL=https://<api> npm run export:web -w @receino/app  # app/dist/ に生成
+```
+
 - **ネイティブ（iOS/Android）**: 同じ `app/` から Expo でビルド。
-- 公開URL: https://receino.com（公開予定）
+- 公開URL: テスト= https://165cm.github.io/receino/ ／ 本番予定= https://receino.com
 
 ## 実装状況（SSOT §10 受け入れ基準）
 
