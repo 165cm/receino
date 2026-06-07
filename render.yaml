@@ -1,0 +1,30 @@
+# render.yaml — Render Blueprint（API サーバを無料枠で常時起動）
+# 使い方:
+#   1) Render（https://render.com）に GitHub でログイン
+#   2) New → Blueprint → このリポジトリ(165cm/receino)を選択 → Apply
+#   3) 下の sync:false の env をダッシュボードで入力
+#        - GEMINI_API_KEY      : 実OCR用キー（未設定ならモックOCRで動作）
+#        - PREMIUM_ACCESS_CODE : プレミアム解放の合言葉（友人に共有する文字列）
+#   4) 払い出された URL（例 https://receino-api.onrender.com）を、GitHub の
+#      リポジトリ Variables `EXPO_PUBLIC_API_URL` に設定（Web ビルドで使用）
+# 注意: 無料枠は約15分アクセスが無いとスリープ→次アクセスで数十秒の起動待ち。
+#       ストレージは一時的（再デプロイでデータはリセット。テスト用途のため許容）。
+services:
+  - type: web
+    name: receino-api
+    runtime: node
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    autoDeploy: true
+    buildCommand: npm ci --include=dev && npm run build -w @receino/core
+    startCommand: npm run start -w @receino/server
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PREMIUM_ACCESS_CODE
+        sync: false
+      - key: DAILY_OCR_LIMIT
+        value: "200"
