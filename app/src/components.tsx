@@ -1,9 +1,9 @@
 // app/src/components.tsx
 // 共通UI部品。
-import React from 'react';
+import React, { useState } from 'react';
 import { Text, View, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
-import { reliability, RELIABILITY_DISCLAIMER, FREE_REACH_CAP } from '@receino/core';
+import { reliabilityProgress, RELIABILITY_STAGES, RELIABILITY_DISCLAIMER, FREE_REACH_CAP } from '@receino/core';
 import { colors, radius, space } from './theme';
 
 // 円グラフ用の配色パレット。
@@ -76,21 +76,61 @@ export function CreditBadge({ balance, premium }: { balance: number; premium: bo
   );
 }
 
-// 信頼度メーター（SSOT §6）。現在値 + 無料到達上限を薄く + 「試算」注記。
-export function ReliabilityMeter({ n }: { n: number }) {
-  const score = reliability(n);
+// 段階 i の枚数レンジ表示（最終段は「N枚〜」）。
+function stageRange(i: number): string {
+  const cur = RELIABILITY_STAGES[i]!;
+  const nxt = RELIABILITY_STAGES[i + 1];
+  return nxt ? `${cur.minReceipts}〜${nxt.minReceipts - 1}枚` : `${cur.minReceipts}枚〜`;
+}
+
+// 信頼度パネル（SSOT §6）。メーター＋「くわしく」で“何枚必要か”の4段階ガイドをアコーディオン展開。
+export function ReliabilityPanel({ n }: { n: number }) {
+  const [open, setOpen] = useState(false);
+  const p = reliabilityProgress(n);
   return (
-    <View>
-      <View style={styles.meterTrack}>
-        <View style={[styles.meterCapGhost, { width: `${FREE_REACH_CAP}%` }]} />
-        <View style={[styles.meterFill, { width: `${score}%` }]} />
-      </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-        <Text style={styles.meterLabel}>分析の信頼度 {score}%（{n}枚）</Text>
-        <Text style={styles.meterCapLabel}>無料の目安 {FREE_REACH_CAP}%</Text>
-      </View>
-      <Text style={styles.disclaimer}>※ {RELIABILITY_DISCLAIMER}</Text>
-    </View>
+    <Card>
+      <Pressable onPress={() => setOpen((o) => !o)} hitSlop={6}>
+        <View style={styles.meterTrack}>
+          <View style={[styles.meterCapGhost, { width: `${FREE_REACH_CAP}%` }]} />
+          <View style={[styles.meterFill, { width: `${p.score}%` }]} />
+        </View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+          <Text style={styles.meterLabel}>分析の信頼度 {p.score}%（{n}枚）</Text>
+          <Text style={styles.calcToggle}>くわしく {open ? '▾' : '▸'}</Text>
+        </View>
+        {p.nextStage ? (
+          <Text style={styles.nextNudge}>
+            あと<Text style={styles.nextStrong}>{p.toNext}枚</Text>で「{p.nextStage.label}」（信頼度{p.nextStage.reliability}%目安）
+          </Text>
+        ) : n > 0 ? (
+          <Text style={styles.nextNudge}>十分な枚数に到達しています👍</Text>
+        ) : null}
+      </Pressable>
+
+      {open && (
+        <View style={styles.ladder}>
+          <Text style={styles.ladderTitle}>正しく分析するには何枚必要？</Text>
+          {RELIABILITY_STAGES.map((s, i) => {
+            const reached = n >= s.minReceipts;
+            const current = i === p.stageIndex;
+            return (
+              <View key={s.key} style={[styles.stageRow, current && styles.stageRowCurrent]}>
+                <Text style={[styles.stageMark, { color: reached ? colors.primary : colors.lock }]}>{reached ? '●' : '○'}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.stageLabel}>
+                    {s.label}
+                    <Text style={styles.stageRange}>　{stageRange(i)}・信頼度{s.reliability}%</Text>
+                    {current && <Text style={styles.stageHere}>　← 今ここ</Text>}
+                  </Text>
+                  <Text style={styles.stageSummary}>{s.summary}</Text>
+                </View>
+              </View>
+            );
+          })}
+          <Text style={styles.disclaimer}>※ {RELIABILITY_DISCLAIMER}</Text>
+        </View>
+      )}
+    </Card>
   );
 }
 
@@ -106,4 +146,16 @@ const styles = StyleSheet.create({
   meterLabel: { fontSize: 12, color: colors.text, fontWeight: '600' },
   meterCapLabel: { fontSize: 12, color: colors.sub },
   disclaimer: { fontSize: 11, color: colors.sub, marginTop: 4 },
+  calcToggle: { fontSize: 12, color: colors.primary, fontWeight: '700' },
+  nextNudge: { fontSize: 12, color: colors.sub, marginTop: 6 },
+  nextStrong: { fontWeight: '900', color: colors.primaryDark },
+  ladder: { marginTop: space(1.5), borderTopWidth: 1, borderTopColor: colors.line, paddingTop: space(1.5) },
+  ladderTitle: { fontSize: 13, fontWeight: '800', color: colors.text, marginBottom: space(1) },
+  stageRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 6, paddingHorizontal: 8, borderRadius: radius.md },
+  stageRowCurrent: { backgroundColor: '#FFF4EE' },
+  stageMark: { width: 18, fontSize: 12, fontWeight: '900', marginTop: 1 },
+  stageLabel: { fontSize: 13, fontWeight: '800', color: colors.text },
+  stageRange: { fontSize: 11, fontWeight: '600', color: colors.sub },
+  stageHere: { fontSize: 11, fontWeight: '800', color: colors.primaryDark },
+  stageSummary: { fontSize: 12, color: colors.sub, marginTop: 2, lineHeight: 17 },
 });

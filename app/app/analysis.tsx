@@ -6,7 +6,7 @@ import { ScrollView, Text, View, StyleSheet, Pressable } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { api, type AnalysisView, type RankingItem } from '../src/api';
 import { useStore } from '../src/store';
-import { Card, Btn, Donut, PIE_COLORS } from '../src/components';
+import { Card, Btn, Donut, PIE_COLORS, ReliabilityPanel } from '../src/components';
 import { colors, space } from '../src/theme';
 
 const yen = (n: number) => `¥${(n ?? 0).toLocaleString()}`;
@@ -112,6 +112,9 @@ export default function Analysis() {
           </Text>
         )}
       </Card>
+
+      {/* 分析の信頼度（メーター＋“何枚必要か”の段階ガイドをアコーディオン展開） */}
+      <ReliabilityPanel n={d?.receipt_count ?? 0} />
 
       {/* 本体（無料はロックでチラ見せ） */}
       <View style={styles.lockWrap}>

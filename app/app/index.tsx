@@ -5,7 +5,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useStore } from '../src/store';
 import { api } from '../src/api';
 import { isOnboarded } from '../src/onboarding';
-import { Card, Btn, CreditBadge, ReliabilityMeter } from '../src/components';
+import { Card, Btn, CreditBadge } from '../src/components';
 import { colors, space } from '../src/theme';
 
 function thisMonth() { return new Date().toISOString().slice(0, 7); }
@@ -73,11 +73,6 @@ export default function Home() {
             残り {credits.balance} 枚（週次{credits.buckets.weekly_remaining} / 初回{credits.buckets.signup_remaining} / 紹介{credits.buckets.referral_remaining}）
           </Text>
         )}
-      </Card>
-
-      {/* 信頼度メーター */}
-      <Card>
-        <ReliabilityMeter n={mData?.count ?? 0} />
       </Card>
 
       {/* ナビ */}
