@@ -25,20 +25,27 @@ const Ctx = createContext<Store | null>(null);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const BOOT_HINT = '開発中のサーバーのため、初回の起動に最大1分ほどかかることがあります。';
 
-/** サーバが起きるまで /health を再試行（最大 maxMs）。進捗を onProgress で通知。 */
-async function wakeServer(onProgress: (s: string) => void, maxMs = 80_000): Promise<boolean> {
+/**
+ * サーバが起きるまで /health を待つ（最大 maxMs）。
+ * 1回のプローブを長めのタイムアウトで投げ、Render のコールドスタート（数十秒）を跨ぐ。
+ * 経過秒は毎秒更新（onProgress）。素のGETなのでCORSプリフライトは発生しない。
+ */
+async function wakeServer(onProgress: (s: string) => void, maxMs = 120_000): Promise<boolean> {
   const start = Date.now();
-  while (Date.now() - start < maxMs) {
-    try {
-      await api.health(12_000);
-      return true;
-    } catch {
-      const sec = Math.round((Date.now() - start) / 1000);
-      onProgress(`開発中のサーバーを起動しています…（約${sec}秒）`);
-      await sleep(1500);
+  const tick = () => onProgress(`開発中のサーバーを起動しています…（約${Math.round((Date.now() - start) / 1000)}秒）`);
+  tick();
+  const ticker = setInterval(tick, 1000);
+  try {
+    while (Date.now() - start < maxMs) {
+      const remaining = maxMs - (Date.now() - start);
+      const ok = await api.health(Math.min(70_000, remaining));
+      if (ok) return true;
+      await sleep(1500); // 失敗時は少し置いて再試行
     }
+    return false;
+  } finally {
+    clearInterval(ticker);
   }
-  return false;
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {

@@ -152,9 +152,19 @@ export const api = {
     const base = scope === 'month' && month ? `?scope=month&month=${month}` : `?scope=all`;
     return req<AnalysisView>('GET', `/analysis${base}&grain=${grain}`);
   },
-  // サーバ起床確認（Render 無料枠のコールドスタート待ちに使う・短いタイムアウト）。
-  health(timeoutMs = 12_000) {
-    return req<{ ok: boolean }>('GET', '/health', undefined, timeoutMs);
+  // サーバ起床確認。プリフライトを誘発しない“素のGET”（カスタムヘッダ/JSON Content-Type無し）。
+  // Render のコールドスタートを跨げるよう長めのタイムアウトで1リクエストを維持する。
+  async health(timeoutMs = 70_000): Promise<boolean> {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetch(`${BASE_URL}/health`, { signal: ctrl.signal });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
   },
   me() {
     return req<{ user: PublicUser; billing: any }>('GET', '/me');
