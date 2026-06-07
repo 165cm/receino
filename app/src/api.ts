@@ -10,11 +10,17 @@ import type { Category } from '@receino/core';
 //  2) Web で localhost 以外から開かれている場合、その host の :3001 を自動採用
 //     （同一LANのスマホ実機ブラウザから http://<PCのIP>:8081 を開くと自動で <PCのIP>:3001 を叩く）
 //  3) 既定 localhost:3001
+// 公開テスト用の既定API（Render）。EXPO_PUBLIC_API_URL を設定すれば上書きされる。
+const PROD_API_URL = 'https://receino-api.onrender.com';
+
 function resolveBaseUrl(): string {
   const explicit = (Constants.expoConfig?.extra as any)?.apiUrl || process.env.EXPO_PUBLIC_API_URL;
   if (explicit) return explicit;
   if (typeof window !== 'undefined' && window.location?.hostname) {
     const h = window.location.hostname;
+    // GitHub Pages 等の公開ホスト（*.github.io）は Render の API を既定に。
+    if (h.endsWith('github.io')) return PROD_API_URL;
+    // LAN実機テスト: PCのIPで開いたら同ホストの :3001（dev-api）を叩く。
     if (h !== 'localhost' && h !== '127.0.0.1') {
       return `${window.location.protocol}//${h}:3001`;
     }
