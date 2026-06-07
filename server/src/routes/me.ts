@@ -7,6 +7,7 @@ import type { Context } from '../context.js';
 import { requireUser } from '../middleware/auth.js';
 import { publicUser } from './users.js';
 import { track } from '../track.js';
+import { premiumCodeOk } from '../security.js';
 
 export function registerMeRoutes(app: FastifyInstance, ctx: Context) {
   app.get('/me', async (req, reply) => {
@@ -27,7 +28,15 @@ export function registerMeRoutes(app: FastifyInstance, ctx: Context) {
     const user = requireUser(ctx, req, reply);
     if (!user) return;
     const now = ctx.now();
-    const body = (req.body ?? {}) as { trial?: boolean };
+    const body = (req.body ?? {}) as { trial?: boolean; access_code?: string };
+    // テスト公開ガード: PREMIUM_ACCESS_CODE 設定時は共有パスワード必須（コスト不正利用の防止）。
+    if (!premiumCodeOk(ctx, body.access_code)) {
+      track(ctx, user.id, 'subscribe_denied_code'); // §8
+      return reply.code(403).send({
+        error: 'invalid_access_code',
+        message: 'プレミアムの利用にはアクセスコードが必要です',
+      });
+    }
     const trialEnds = body.trial
       ? new Date(now.getTime() + ctx.billing.trialDays * 86_400_000).toISOString()
       : null;

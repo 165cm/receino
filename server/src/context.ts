@@ -25,12 +25,28 @@ function defaultOcr(): OcrProvider {
   return new MockOcrProvider();
 }
 
+/** テスト公開向けの簡易ガード設定（security.ts）。env から読み込む。 */
+export interface SecurityConfig {
+  premiumAccessCode: string | null; // /subscribe に必要な共有パスワード（null=ゲート無効）
+  dailyOcrLimit: number | null; // 1日あたりの実OCR呼び出し上限（null=無制限）
+}
+
 export interface Context {
   repo: Repo;
   credits: CreditService;
   ocr: OcrProvider;
   billing: BillingProvider;
   now: () => Date; // テストで時刻を差し替えられるよう関数化
+  security: SecurityConfig;
+  ocrUsage: { day: string; count: number }; // 日次OCRカウンタ（プロセス内・簡易）
+}
+
+function defaultSecurity(): SecurityConfig {
+  const raw = process.env.DAILY_OCR_LIMIT ? Number(process.env.DAILY_OCR_LIMIT) : NaN;
+  return {
+    premiumAccessCode: process.env.PREMIUM_ACCESS_CODE || null,
+    dailyOcrLimit: Number.isFinite(raw) && raw > 0 ? raw : null,
+  };
 }
 
 export function createContext(overrides: Partial<Context> = {}): Context {
@@ -41,5 +57,7 @@ export function createContext(overrides: Partial<Context> = {}): Context {
     ocr: overrides.ocr ?? defaultOcr(),
     billing: overrides.billing ?? mockBilling,
     now: overrides.now ?? (() => new Date()),
+    security: overrides.security ?? defaultSecurity(),
+    ocrUsage: overrides.ocrUsage ?? { day: '', count: 0 },
   };
 }

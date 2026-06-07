@@ -92,8 +92,8 @@ type Raw = {
   total?: number | string;
 };
 
-/** サンプル/プレビュー判定（実画像base64は十分長い）。 */
-function isSampleSentinel(image: string): boolean {
+/** サンプル/プレビュー判定（実画像base64は十分長い）。実OCRを呼ぶかの判定にも使う。 */
+export function isSampleSentinel(image: string): boolean {
   return !image || image.length < 200 || image === 'fail' ||
     image === 'BASE64' || image.endsWith('SAMPLE');
 }

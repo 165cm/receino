@@ -57,7 +57,9 @@ export default function Onboarding() {
       const reg = await api.register(goal?.label ?? '', budget?.mid, household);
       // 招待リンク(?ref=)経由なら成立を試みる（双方向+5）。SSOT §4.4。
       await tryClaimPendingReferral(reg.user.referred_by);
-      if (startTrial) await api.subscribe(true);
+      // テスト公開ガード(PREMIUM_ACCESS_CODE)時はコード無しの開始が403。失敗しても無料で続行し、
+      // プレミアムは後から PayWall でアクセスコードを入れて解放する。
+      if (startTrial) { try { await api.subscribe(true); } catch { /* non-fatal */ } }
       api.track('onboarding_completed', { goal: goal?.key, budget: budget?.key, household, started_trial: startTrial }); // §8
       setOnboarded();
       await refresh();

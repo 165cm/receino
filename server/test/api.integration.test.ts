@@ -138,6 +138,56 @@ describe('紹介（§4.4）', () => {
   });
 });
 
+describe('テスト公開ガード（security）', () => {
+  beforeEach(() => { clock = new Date('2026-06-03T00:00:00Z'); });
+
+  function makeAppSec(security: { premiumAccessCode?: string | null; dailyOcrLimit?: number | null }) {
+    const ctx = createContext({
+      now: () => clock,
+      security: { premiumAccessCode: security.premiumAccessCode ?? null, dailyOcrLimit: security.dailyOcrLimit ?? null },
+    });
+    return buildApp(ctx);
+  }
+
+  it('アクセスコード設定時: コード無しの subscribe は403', async () => {
+    const { app } = makeAppSec({ premiumAccessCode: 'aikotoba' });
+    const { user } = await createUser(app);
+    const res = await app.inject({ method: 'POST', url: '/subscribe', headers: { 'x-user-id': user.id }, payload: { trial: true } });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().error).toBe('invalid_access_code');
+    expect((await app.inject({ method: 'GET', url: '/me', headers: { 'x-user-id': user.id } })).json().user.is_premium).toBe(false);
+  });
+
+  it('アクセスコード設定時: 正しいコードでプレミアム化', async () => {
+    const { app } = makeAppSec({ premiumAccessCode: 'aikotoba' });
+    const { user } = await createUser(app);
+    const res = await app.inject({ method: 'POST', url: '/subscribe', headers: { 'x-user-id': user.id }, payload: { trial: true, access_code: 'aikotoba' } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().user.is_premium).toBe(true);
+  });
+
+  it('未設定なら従来どおりコード無しで subscribe 可', async () => {
+    const { app } = makeAppSec({});
+    const { user } = await createUser(app);
+    const res = await app.inject({ method: 'POST', url: '/subscribe', headers: { 'x-user-id': user.id }, payload: { trial: true } });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('日次OCR上限: 上限超過の実画像スキャンは429（サンプルは対象外）', async () => {
+    const { app } = makeAppSec({ dailyOcrLimit: 1 });
+    const { user } = await createUser(app);
+    const realImage = 'x'.repeat(300); // sentinel ではない＝実OCR扱い
+    const s1 = await app.inject({ method: 'POST', url: '/scan', headers: { 'x-user-id': user.id }, payload: { image: realImage } });
+    expect(s1.statusCode).toBe(200);
+    const s2 = await app.inject({ method: 'POST', url: '/scan', headers: { 'x-user-id': user.id }, payload: { image: realImage } });
+    expect(s2.statusCode).toBe(429);
+    expect(s2.json().error).toBe('ocr_quota_exceeded');
+    // サンプル（短い sentinel）は上限後でも通る
+    const sample = await app.inject({ method: 'POST', url: '/scan', headers: { 'x-user-id': user.id }, payload: { image: 'data' } });
+    expect(sample.statusCode).toBe(200);
+  });
+});
+
 describe('プレミアムは消費しない', () => {
   beforeEach(() => { clock = new Date('2026-06-03T00:00:00Z'); });
   it('subscribe後は保存しても残高が減らない', async () => {

@@ -1,6 +1,6 @@
 // app/app/paywall.tsx — PayWall（SSOT §7。誠実な提示・ダークパターン不採用）
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, View, StyleSheet, Alert } from 'react-native';
+import { ScrollView, Text, View, StyleSheet, Alert, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useStore } from '../src/store';
 import { api } from '../src/api';
@@ -11,18 +11,24 @@ export default function Paywall() {
   const router = useRouter();
   const { refresh } = useStore();
   const [loading, setLoading] = useState(false);
+  const [code, setCode] = useState('');
 
   useEffect(() => { api.track('paywall_viewed'); }, []); // §8
 
   async function startTrial() {
     setLoading(true);
     try {
-      await api.subscribe(true);
+      await api.subscribe(true, code.trim() || undefined);
       await refresh();
       Alert.alert('プレミアム開始', '7日間の無料トライアルを開始しました');
       router.replace('/');
     } catch (e: any) {
-      Alert.alert('エラー', String(e?.message ?? e));
+      // テスト公開ガード: アクセスコード未入力/誤りは 403。
+      if (e instanceof api.ApiError && e.status === 403) {
+        Alert.alert('アクセスコードが必要です', 'テスト公開中はプレミアムの利用に合言葉が必要です。配布されたアクセスコードを入力してください。');
+      } else {
+        Alert.alert('エラー', String(e?.message ?? e));
+      }
     } finally { setLoading(false); }
   }
 
@@ -45,6 +51,20 @@ export default function Paywall() {
         </View>
       </Card>
 
+      <Card>
+        <Text style={styles.codeLabel}>アクセスコード（テスト公開用）</Text>
+        <Text style={styles.sub}>友人テスト中はプレミアムの利用に合言葉が必要です。配布されたコードを入力してください。</Text>
+        <TextInput
+          value={code}
+          onChangeText={setCode}
+          placeholder="合言葉を入力"
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry
+          style={styles.codeInput}
+        />
+      </Card>
+
       <Btn label="7日間無料で始める" onPress={startTrial} loading={loading} />
       <View style={{ height: space(1) }} />
       <Btn label="あとで" variant="ghost" onPress={() => router.back()} />
@@ -63,4 +83,6 @@ const styles = StyleSheet.create({
   timeline: { marginTop: space(1.5), gap: 6 as any },
   tl: { color: colors.text, fontSize: 13 },
   fine: { color: colors.sub, fontSize: 11, textAlign: 'center', marginTop: space(2) },
+  codeLabel: { fontSize: 14, fontWeight: '800', color: colors.text, marginBottom: 4 },
+  codeInput: { marginTop: space(1), borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text, backgroundColor: '#fff' },
 });

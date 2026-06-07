@@ -206,8 +206,8 @@ export const api = {
       { code },
     );
   },
-  subscribe(trial: boolean) {
-    return req<{ user: PublicUser }>('POST', '/subscribe', { trial });
+  subscribe(trial: boolean, accessCode?: string) {
+    return req<{ user: PublicUser }>('POST', '/subscribe', { trial, access_code: accessCode });
   },
   unsubscribe() {
     return req<{ user: PublicUser }>('POST', '/unsubscribe');

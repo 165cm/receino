@@ -5,7 +5,8 @@
 import type { FastifyInstance } from 'fastify';
 import type { Context } from '../context.js';
 import { requireUser } from '../middleware/auth.js';
-import { isOcrError } from '../services/ocr-service.js';
+import { isOcrError, isSampleSentinel } from '../services/ocr-service.js';
+import { tryConsumeOcrQuota } from '../security.js';
 import { track } from '../track.js';
 
 export function registerScanRoutes(app: FastifyInstance, ctx: Context) {
@@ -31,6 +32,16 @@ export function registerScanRoutes(app: FastifyInstance, ctx: Context) {
 
     // 2. 解析（未保存ドラフト）。消費はまだしない。
     const body = (req.body ?? {}) as { image?: string; mediaType?: string };
+    // 2-0. 実OCRの日次上限ガード（テスト公開時のコスト青天井防止）。サンプルは対象外。
+    if (!isSampleSentinel(body.image ?? '') && !tryConsumeOcrQuota(ctx, now)) {
+      track(ctx, user.id, 'scan_ocr_quota_exceeded'); // §8
+      // eslint-disable-next-line no-console
+      console.log('[scan] daily OCR quota exceeded');
+      return reply.code(429).send({
+        error: 'ocr_quota_exceeded',
+        message: '本日の解析上限に達しました。時間をおいて再度お試しください。',
+      });
+    }
     const kb = Math.round((body.image?.length ?? 0) / 1024);
     const t0 = Date.now();
     track(ctx, user.id, 'scan_started', { kb }); // §8
