@@ -22,6 +22,9 @@ export default function Scan() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [picked, setPicked] = useState<{ base64: string; mediaType: string } | null>(null);
+  // 複数アップロード: 解析済みの残りキュー（draft＋画像）と一括解析の進捗。
+  const [queue, setQueue] = useState<{ draft: Draft; base64: string; mediaType: string }[]>([]);
+  const [batch, setBatch] = useState<{ done: number; total: number } | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [saved, setSaved] = useState<{ score: number; n: number; balance: number } | null>(null);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
@@ -49,7 +52,32 @@ export default function Scan() {
     return { base64, mediaType: blob.type || undefined };
   }
 
-  // カメラ or ライブラリから実画像を取得（解析は明示ボタンで実行）。
+  // 1枚の asset を base64 へ（リサイズ＋JPEG化、失敗時はフォールバック）。
+  async function assetToPicked(asset: ImagePicker.ImagePickerAsset): Promise<{ base64: string; mediaType: string; uri: string | null } | null> {
+    try {
+      if (asset.uri) {
+        const m = await ImageManipulator.manipulateAsync(
+          asset.uri,
+          [{ resize: { width: 1500 } }],
+          { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG, base64: true },
+        );
+        if (m.base64) return { base64: m.base64, mediaType: 'image/jpeg', uri: m.uri };
+      }
+    } catch {
+      /* フォールバックへ */
+    }
+    let base64 = asset.base64 ?? '';
+    let mediaType = mediaTypeFromAsset(asset);
+    if (!base64 && asset.uri) {
+      const f = await base64FromUri(asset.uri); // iOS Safari 等のフォールバック
+      base64 = f.base64;
+      if (f.mediaType) mediaType = f.mediaType;
+    }
+    if (!base64) return null;
+    return { base64, mediaType, uri: asset.uri ?? null };
+  }
+
+  // カメラ=1枚 / ライブラリ=最大5枚。1枚は確認後に解析、複数は一括解析→順に確認。
   async function capture(useCamera: boolean) {
     setErr(null);
     try {
@@ -57,45 +85,59 @@ export default function Scan() {
         const perm = await ImagePicker.requestCameraPermissionsAsync();
         if (!perm.granted) { setErr('カメラの権限が必要です（設定から許可してください）'); return; }
       }
-      const opts = { base64: true, quality: 0.6, mediaTypes: ImagePicker.MediaTypeOptions.Images } as const;
+      const baseOpts = { base64: true, quality: 0.6, mediaTypes: ImagePicker.MediaTypeOptions.Images } as const;
       const result = useCamera
-        ? await ImagePicker.launchCameraAsync(opts)
-        : await ImagePicker.launchImageLibraryAsync(opts);
-      if (result.canceled || !result.assets?.[0]) return;
-      const asset = result.assets[0];
+        ? await ImagePicker.launchCameraAsync(baseOpts)
+        : await ImagePicker.launchImageLibraryAsync({ ...baseOpts, allowsMultipleSelection: true, selectionLimit: 5 });
+      if (result.canceled || !result.assets?.length) return;
 
-      // アップロード前にリサイズ＋JPEG化（容量削減で高速化・HEIC等を正規化）。
-      try {
-        if (asset.uri) {
-          const m = await ImageManipulator.manipulateAsync(
-            asset.uri,
-            [{ resize: { width: 1500 } }],
-            { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG, base64: true },
-          );
-          if (m.base64) {
-            setPreview(m.uri);
-            setPicked({ base64: m.base64, mediaType: 'image/jpeg' });
-            return;
-          }
-        }
-      } catch {
-        /* 失敗時は元画像にフォールバック */
+      // 複数選択 → 一括解析へ
+      if (result.assets.length > 1) {
+        await analyzeBatch(result.assets.slice(0, 5));
+        return;
       }
-
-      let base64 = asset.base64 ?? '';
-      let mediaType = mediaTypeFromAsset(asset);
-      if (!base64 && asset.uri) {
-        const f = await base64FromUri(asset.uri); // iOS Safari 等のフォールバック
-        base64 = f.base64;
-        if (f.mediaType) mediaType = f.mediaType;
-      }
-      if (!base64) { setErr('画像を取得できませんでした。別の写真でお試しください。'); return; }
-
-      setPreview(asset.uri ?? null);
-      setPicked({ base64, mediaType });
+      // 1枚 → プレビュー＋解析ボタン
+      const p = await assetToPicked(result.assets[0]!);
+      if (!p) { setErr('画像を取得できませんでした。別の写真でお試しください。'); return; }
+      setPreview(p.uri);
+      setPicked({ base64: p.base64, mediaType: p.mediaType });
     } catch (e: any) {
       setErr('画像の取得でエラー: ' + String(e?.message ?? e));
     }
+  }
+
+  // 複数枚を順に解析してキューへ。最初の1枚を確認画面に出し、残りは保存ごとに繰り上げる。
+  async function analyzeBatch(assets: ImagePicker.ImagePickerAsset[]) {
+    setErr(null);
+    setPhase('analyzing');
+    setBatch({ done: 0, total: assets.length });
+    const results: { draft: Draft; base64: string; mediaType: string }[] = [];
+    let failed = 0;
+    for (let i = 0; i < assets.length; i++) {
+      setBatch({ done: i, total: assets.length });
+      const p = await assetToPicked(assets[i]!);
+      if (!p) { failed++; continue; }
+      try {
+        const r = await api.scan(p.base64, p.mediaType);
+        results.push({ draft: r.draft, base64: p.base64, mediaType: p.mediaType });
+      } catch (e: any) {
+        if (e instanceof api.ApiError && e.status === 402) { setBatch(null); router.replace('/paywall'); return; }
+        failed++; // 読取失敗(422)等はスキップして続行
+      }
+    }
+    setBatch(null);
+    if (results.length === 0) {
+      setPhase('idle');
+      setErr('読み取れた画像がありませんでした。明るく全体が写るように撮り直してください。');
+      return;
+    }
+    const [first, ...rest] = results;
+    setDraft(first!.draft);
+    setPicked({ base64: first!.base64, mediaType: first!.mediaType });
+    setPreview(null);
+    setQueue(rest);
+    setErr(failed > 0 ? `${failed}枚は読み取れずスキップしました。` : null);
+    setPhase('review');
   }
 
   async function analyze(image: string, mediaType?: string) {
@@ -175,13 +217,37 @@ export default function Scan() {
       });
       setCredits(r.credits);
       await refresh();
-      // 保存成功 → 埋め込み招待つきの完了画面へ（SSOT §4.4）
-      setSaved({ score: r.reliability.score, n: r.reliability.n, balance: r.credits.balance });
-      setPhase('done');
+      if (queue.length > 0) {
+        // まとめてアップロード中 → 次の1枚を確認画面へ
+        const [next, ...rest] = queue;
+        setDraft(next!.draft);
+        setPicked({ base64: next!.base64, mediaType: next!.mediaType });
+        setQueue(rest);
+        setErr(null);
+        setPhase('review');
+      } else {
+        // 保存成功 → 埋め込み招待つきの完了画面へ（SSOT §4.4）
+        setSaved({ score: r.reliability.score, n: r.reliability.n, balance: r.credits.balance });
+        setPhase('done');
+      }
     } catch (e: any) {
       setPhase('review');
       if (e instanceof api.ApiError && e.status === 402) router.replace('/paywall');
       else Alert.alert('エラー', String(e?.message ?? e));
+    }
+  }
+
+  // バッチ中は「この1枚を飛ばす」で次へ、単発は画面を閉じる。
+  function skipOrCancel() {
+    if (queue.length > 0) {
+      const [next, ...rest] = queue;
+      setDraft(next!.draft);
+      setPicked({ base64: next!.base64, mediaType: next!.mediaType });
+      setQueue(rest);
+      setErr(null);
+      setPhase('review');
+    } else {
+      router.back();
     }
   }
 
@@ -220,7 +286,7 @@ export default function Scan() {
       <ScrollView contentContainerStyle={styles.container}>
         <Card>
           <Text style={styles.h}>レシートをAIで読み取る</Text>
-          <Text style={styles.sub}>レシート全体が入るように撮影/選択してください。AIが品目・カテゴリ・金額を自動で構造化します。</Text>
+          <Text style={styles.sub}>レシート全体が入るように撮影/選択してください。ライブラリからは最大5枚まとめて選べます。AIが品目・カテゴリ・金額を自動で構造化します。</Text>
         </Card>
         {preview ? (
           <Image source={{ uri: preview }} style={styles.preview} resizeMode="contain" />
@@ -241,7 +307,7 @@ export default function Scan() {
           <>
             <Btn label="📷 カメラで撮る" onPress={() => capture(true)} />
             <View style={{ height: space(1) }} />
-            <Btn label="🖼 ライブラリから選ぶ" variant="ghost" onPress={() => capture(false)} />
+            <Btn label="🖼 ライブラリから選ぶ（最大5枚）" variant="ghost" onPress={() => capture(false)} />
             <View style={{ height: space(1) }} />
             <Btn label="サンプルで試す" variant="ghost" onPress={() => analyze('BASE64_SAMPLE')} />
             <View style={{ height: space(1) }} />
@@ -257,7 +323,7 @@ export default function Scan() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.h, { marginTop: space(2) }]}>AIが解析中…</Text>
+        <Text style={[styles.h, { marginTop: space(2) }]}>AIが解析中…{batch ? `（${Math.min(batch.done + 1, batch.total)}/${batch.total}枚目）` : ''}</Text>
         <View style={{ flexDirection: 'row', gap: space(1) as any, marginTop: space(2) }}>
           {STEPS.map((s, i) => (
             <Text key={s} style={{ color: i <= stepIdx ? colors.primary : colors.lock, fontWeight: '700' }}>
@@ -275,6 +341,8 @@ export default function Scan() {
       <Card>
         <Text style={styles.h}>確認・修正</Text>
         <Text style={styles.sub}>店名 / 日付 / 品目 / カテゴリ / 金額をチェックして保存。</Text>
+        {queue.length > 0 && <Text style={styles.batchNote}>📚 まとめてアップロード中：このあと残り {queue.length} 枚</Text>}
+        {err && <Text style={styles.err}>⚠️ {err}</Text>}
       </Card>
       <Card>
         <Field label="店名" value={draft?.store ?? ''} onChange={(v) => draft && setDraft({ ...draft, store: v })} />
@@ -319,13 +387,15 @@ export default function Scan() {
         </View>
       </Card>
       <Btn
-        label={user?.is_premium ? 'この内容で保存' : 'この内容で保存（1枚消費）'}
+        label={queue.length > 0
+          ? `保存して次へ（残り${queue.length}枚）`
+          : (user?.is_premium ? 'この内容で保存' : 'この内容で保存（1枚消費）')}
         onPress={save}
         loading={phase === 'saving'}
         disabled={!draft || draft.items.length === 0}
       />
       <View style={{ height: space(1) }} />
-      <Btn label="やめる" variant="ghost" onPress={() => router.back()} />
+      <Btn label={queue.length > 0 ? 'この1枚を飛ばす' : 'やめる'} variant="ghost" onPress={skipOrCancel} />
     </ScrollView>
   );
 }
@@ -346,6 +416,7 @@ const styles = StyleSheet.create({
   cameraMock: { backgroundColor: '#2B2B2B', borderRadius: 18, height: 260, alignItems: 'center', justifyContent: 'center', marginVertical: space(2) },
   preview: { width: '100%', height: 280, borderRadius: 14, backgroundColor: '#000', marginVertical: space(2) },
   note: { color: colors.sub, fontSize: 11, textAlign: 'center', marginTop: space(1) },
+  batchNote: { color: colors.primaryDark, fontSize: 13, fontWeight: '700', marginTop: space(1) },
   err: { color: colors.danger, fontSize: 13, fontWeight: '600', textAlign: 'center', marginBottom: space(1.5) },
   itemName: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 6 },
   dateHint: { fontSize: 11, color: colors.sub, marginTop: -2 },
